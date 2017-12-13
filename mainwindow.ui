@@ -73,24 +73,6 @@
      <string>Find</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="button_my_requests">
-    <property name="geometry">
-     <rect>
-      <x>810</x>
-      <y>10</y>
-      <width>171</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>My Requests</string>
-    </property>
-   </widget>
    <widget class="QTableWidget" name="table_widget">
     <property name="geometry">
      <rect>
