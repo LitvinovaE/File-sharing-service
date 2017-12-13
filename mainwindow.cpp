@@ -1,7 +1,11 @@
+#include <iostream>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+    , login_window(Q_NULLPTR)
 {
     ui->setupUi(this);
 
@@ -64,8 +68,16 @@ void MainWindow::on_actionChange_download_share_folders_triggered()
 
 void MainWindow::on_actionChange_login_triggered()
 {
-    Login w;
-    w.show();
+    this->login_window = new Login(this);
+    QObject::connect(this->login_window, SIGNAL(login_changed(QString)),
+                     this, SLOT(slot_login_changed(QString)));
+    this->login_window->show();
+}
+
+void MainWindow::slot_login_changed(QString login)
+{
+   // qDebug() << "Login changed to '" + login + "'";
+   delete this->login_window;
 }
 
 void MainWindow::on_actionAbout_triggered()

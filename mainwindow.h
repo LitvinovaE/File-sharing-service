@@ -27,9 +27,12 @@ private slots:
     void on_actionAbout_triggered();
     void on_actionCreators_triggered();
 
+    void slot_login_changed(QString login);
 private:
     Ui::MainWindow *ui;
     void draw_table(QString **file_table, int num_elem);
+
+    Login *login_window;
 };
 
 #endif // MAINWINDOW_H

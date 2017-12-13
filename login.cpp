@@ -1,14 +1,14 @@
 #include "login.h"
 #include "ui_login.h"
 
-Login::Login(QWidget *parent) : QWidget(parent), ui(new Ui::Login)
+Login::Login(QWidget *parent) : QDialog(parent), login_ui(new Ui::Login)
 {
-    ui->setupUi(this);
+    this->login_ui->setupUi(this);
 }
 
 Login::~Login()
 {
-    delete ui;
+    delete this->login_ui;
 }
 
 bool Login::login_is_correct(QString str)
@@ -32,7 +32,8 @@ bool Login::is_exist()
 
 void Login::on_button_OK_clicked()
 {
-    QString login = ui->login_edit->text();
+    auto login_edit = this->login_ui->login_edit;
+    QString login = login_edit->text();
     if(login_is_correct(login))                // login saved in the file "LOGIN"
     {
         QFile login_file("LOGIN");
@@ -43,11 +44,12 @@ void Login::on_button_OK_clicked()
             login_file.close();
         }
         close();
+        emit login_changed(login);
     }
     else                                        // clear field and show a hint
     {
-        ui->login_edit->clear();
-        ui->login_edit->setStyleSheet("border: 2px solid red");
-        QToolTip::showText(ui->login_edit->mapToGlobal(QPoint()), tr("Only letters and numbers!"));
+        login_edit->clear();
+        login_edit->setStyleSheet("border: 2px solid red");
+        QToolTip::showText(login_edit->mapToGlobal(QPoint()), tr("Only letters and numbers!"));
     }
 }

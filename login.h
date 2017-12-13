@@ -1,7 +1,7 @@
 #ifndef LOGIN_H
 #define LOGIN_H
 
-#include <QWidget>
+#include <QDialog>
 #include <QString>
 #include <QToolTip>
 #include <QFile>
@@ -11,7 +11,7 @@ namespace Ui {
 class Login;
 }
 
-class Login : public QWidget
+class Login : public QDialog
 {
     Q_OBJECT
 
@@ -23,8 +23,11 @@ public:
 private slots:
     void on_button_OK_clicked();
 
+signals:
+    void login_changed(QString login);
+
 private:
-    Ui::Login *ui;
+    Ui::Login *login_ui;
     bool login_is_correct(QString str);
 };
 
