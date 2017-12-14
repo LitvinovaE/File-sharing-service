@@ -82,6 +82,12 @@
       <height>691</height>
      </rect>
     </property>
+    <property name="cursor" stdset="0">
+     <cursorShape>ArrowCursor</cursorShape>
+    </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::NoEditTriggers</set>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -97,7 +103,6 @@
     <property name="title">
      <string>Settings</string>
     </property>
-    <addaction name="actionChange_download_share_folders"/>
     <addaction name="actionChange_login"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
@@ -105,9 +110,8 @@
      <string>About</string>
     </property>
     <addaction name="actionCreators"/>
-    <addaction name="actionAbout"/>
     <addaction name="separator"/>
-    <addaction name="actionHep"/>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuAbout"/>
@@ -134,7 +138,7 @@
   </action>
   <action name="actionHep">
    <property name="text">
-    <string>Hep</string>
+    <string>Help</string>
    </property>
   </action>
  </widget>

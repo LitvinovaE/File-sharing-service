@@ -16,12 +16,15 @@ CONFIG  += c++11
 SOURCES += main.cpp\
     mainwindow.cpp \
     login.cpp \
-    server.cpp
+    server.cpp \
+    request.cpp
 
 HEADERS += mainwindow.h \
     login.h \
-    server.h
+    server.h \
+    request.h
 
 FORMS   += mainwindow.ui \
     login.ui \
-    server.ui
+    server.ui \
+    request.ui

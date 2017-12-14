@@ -30,7 +30,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
     {
         QToolTip::showText(ui->file_mask_edit->mapToGlobal(QPoint()), tr("Please, enter the mask of files"));
     }
-    QString **file_table = new QString* [30];
+    /*QString **file_table = new QString* [30];
     int num_elem = 30;
     for(int j = 0; j < num_elem; j++)
     {
@@ -42,6 +42,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
         file_table[j] = str;
     }
     draw_table(file_table, num_elem);
+    new_request(QString("John"), QString("bloknot.txt"));*/
 }
 
 void MainWindow::draw_table(QString **file_table, int num_elem)
@@ -61,31 +62,40 @@ void MainWindow::draw_table(QString **file_table, int num_elem)
         }
 }
 
-void MainWindow::on_actionChange_download_share_folders_triggered()
+void MainWindow::new_request(QString user_name, QString file_name)
 {
-
+    request_window = new Request(this);
+    QObject::connect(this->request_window, SIGNAL(request_created(QString)), this, SLOT(slot_request_created(QString)));
+    request_window->set_label(user_name, file_name);
+    request_window->show();
 }
 
 void MainWindow::on_actionChange_login_triggered()
 {
     this->login_window = new Login(this);
-    QObject::connect(this->login_window, SIGNAL(login_changed(QString)),
-                     this, SLOT(slot_login_changed(QString)));
+    QObject::connect(this->login_window, SIGNAL(login_changed(QString)), this, SLOT(slot_login_changed(QString)));
     this->login_window->show();
 }
 
 void MainWindow::slot_login_changed(QString login)
 {
-   // qDebug() << "Login changed to '" + login + "'";
-   delete this->login_window;
+    delete this->login_window;
+}
+
+void MainWindow::slot_request_created(QString request)
+{
+
 }
 
 void MainWindow::on_actionAbout_triggered()
 {
-
+    QMessageBox::information(0, "About", "The program is designed to exchange files over the network. \
+With its help you can download files of users connected to the same server, and also you can respond to user \
+requests allowing or rejecting access to your files.");
 }
 
 void MainWindow::on_actionCreators_triggered()
 {
-    QMessageBox::information(0, "Creators", "This project is created by:\n\nBondarev Mihail\nLitvinova Evgeniya\nOrlov Oleg\n\n2017, MIPT");
+    QMessageBox::information(0, "Creators", "This project is created by:\n\nBondarev Mihail"
+                                            "\nLitvinova Evgeniya\nOrlov Oleg\n\n2017, MIPT");
 }
