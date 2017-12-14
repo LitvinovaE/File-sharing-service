@@ -9,8 +9,8 @@ int main(int argc, char *argv[])
     /*Login w;
     if (!w.is_exist())
         w.show();*/
-    /*Server s;
-    s.show();*/
+    Server s;
+    s.show();
     MainWindow main_window;
     main_window.show();
 

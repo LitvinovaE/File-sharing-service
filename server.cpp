@@ -1,7 +1,7 @@
 #include "server.h"
 #include "ui_server.h"
 
-Server::Server(QWidget *parent) : QWidget(parent), ui(new Ui::Server)
+Server::Server(QWidget *parent) : QDialog(parent), ui(new Ui::Server)
 {
     ui->setupUi(this);
     ui->password_edit->setEchoMode(QLineEdit::Password);            // show "*" instead of symbols
