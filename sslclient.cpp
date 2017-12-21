@@ -1,35 +1,31 @@
 ﻿#include <QtWidgets>
 #include <QtNetwork>
+#include <string>
 
 #include "sslclient.h"
 
+#define SIZE_BLOCK_FOR_SEND_FILE 1024
 
 void Client::loadPfxCertifcate(QString certPath, QString passphrase)
 {
-//    qDebug() << "Load " + certPath + "child.crt";
-//    QList<QSslCertificate> certificate = QSslCertificate::fromPath(certPath + "child.crt");
-//    QSslCertificate cert = certificate.first();
 
-//    QFile certFile(certPath + "child.key");
-//    certFile.open(QFile::ReadOnly);
-//    QSslKey key(&certFile, QSsl::Rsa, QSsl::Pem, QSsl::PrivateKey, QByteArray::fromStdString(passphrase.toStdString()));
-//    certFile.close();
+    qDebug()<< "ssl gen rsa";
+    QString keygen = "openssl genrsa -out child.key -des 2048 2>/dev/null" + QString("\n") + passphrase + QString("\n") + passphrase;
+    system(keygen.toStdString().c_str());
+    qDebug() <<"ssl gen rootCA";
+    system("openssl req -x509 -newkey rsa:2048 -keyout my.key -out rootCA.crt -days 365 -subj \"/C=US/ST=Oregon/L=Portland/O=Company Name/OU=Org/CN=www.com\" 2>/dev/null");
 
     sslSocket->setPeerVerifyMode(QSslSocket::VerifyNone);
     QList<QSslCertificate> importedCerts = QSslCertificate::fromPath(certPath + "rootCA.crt");
     qDebug() << "read CA certificate";
 
-//    qDebug() << "Imported cert:\n"
-//             << "certificate:\n" << cert.toText() << "\n----------\n"
-//             << "key:\n" << key.toPem() << "\n----------\n"
-//             << "importedcerts:\n" << importedCerts.first().toText() << "\n----------\n";
     sslSocket->setProtocol(QSsl::TlsV1_2);
     QSslCertificate cert = QSslCertificate::fromPath(certPath + "child.crt").first();
     qDebug() << "read certificate";
     this->sslSocket->setCaCertificates(importedCerts);
     this->sslSocket->setLocalCertificate(cert);
     qDebug() << sslSocket->localCertificate().toText();
-    this->sslSocket->setPrivateKey(certPath + "child.key", QSsl::Rsa, QSsl::Pem, QByteArray::fromStdString(passphrase.toStdString()));
+    this->sslSocket->setPrivateKey("child.key", QSsl::Rsa, QSsl::Pem, QByteArray::fromStdString(passphrase.toStdString()));
 
 }
 
@@ -84,17 +80,15 @@ Client::Client(QWidget *parent)
     buttonBox->addButton(getFortuneButton, QDialogButtonBox::ActionRole);
     buttonBox->addButton(quitButton, QDialogButtonBox::RejectRole);
 
-//! [1]
+
     sslSocket = new QSslSocket(this);
 
 
-    QString certs_path = "D:/Oleg/programmin/task1/seq/tc/testchild/";
+    QString certs_path = "/home/oleg/Qt/projects/seq/tc/testchild/";
 
     loadPfxCertifcate(certs_path, "12345");
     qDebug() << sslSocket->localCertificate().subjectInfo(QSslCertificate::CommonName).join(QLatin1Char(' '));
 
-
-//! [1]
 
     connect(hostCombo, SIGNAL(editTextChanged(QString)),
             this, SLOT(enableGetFortuneButton()));
@@ -103,14 +97,14 @@ Client::Client(QWidget *parent)
     connect(getFortuneButton, SIGNAL(clicked()),
             this, SLOT(requestNewFortune()));
     connect(quitButton, SIGNAL(clicked()), this, SLOT(close()));
-//! [2] //! [3]
+
     connect(sslSocket, SIGNAL(readyRead()), this, SLOT(readFortune()));
-//! [2] //! [4]
+
     connect(sslSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-//! [3]
+
             this, SLOT(displayError(QAbstractSocket::SocketError)));
     connect(sslSocket, SIGNAL(disconnected()), this, SLOT(discon()));
-//! [4]
+
 
     QGridLayout *mainLayout = new QGridLayout;
     mainLayout->addWidget(hostLabel, 0, 0);
@@ -148,11 +142,10 @@ Client::Client(QWidget *parent)
 
 
     }
-//! [5]
-}
-//! [5]
 
-//! [6]
+}
+
+
 void Client::requestNewFortune()
 {
      static bool conn = false;
@@ -162,7 +155,7 @@ void Client::requestNewFortune()
     {
         blockSize = 0;
         sslSocket->abort();
-//! [7]
+
         qDebug() << "Connecting to server: "
                  << hostCombo->currentText()
                  << portLineEdit->text().toInt();
@@ -180,34 +173,76 @@ void Client::requestNewFortune()
         else
              qDebug() <<"send";
     }
-//! [7]
-}
-//! [6]
 
-//! [8]
+}
+
 void Client::readFortune()
 {
-//! [9]
-
 
     char request[256];
-    //in >> nextFortune;
 
     qint64 linelen = sslSocket->readLine(request, sizeof(request));
 
     if(linelen < 0) qDebug() <<"\nreading failed";
-    //! [11]
+    else qDebug() << request;
+    QString serverSend(request);
 
-
-//! [12]
-
-//! [9]
+    if(serverSend.toStdString().find("REQUEST") != std::string::npos)
+    {
+        std::size_t len = serverSend.toStdString().copy(request, 256, 8);
+        request[len] = '\0';
+        emit findByRegexp(request);
+    }
+    else if(serverSend.toStdString().find("REJECT") != std::string::npos)
+    {
+        std::size_t len = serverSend.toStdString().copy(request, 256, 7);
+        request[len] = '\0';
+        emit ServerError(request);
+    }
+    else if(serverSend.toStdString().find("REPLY") != std::string::npos)
+    {
+        QRegExp reg("[ ;]");
+        QStringList files = serverSend.split(reg, QString::SkipEmptyParts);
+        for (int i = 1; i < files.size(); ++i)
+        {
+            QString tmp = files[i];
+            QStringList ftmp = tmp.split(QRegExp(":"), QString::SkipEmptyParts);
+            QString tmpID = ftmp[0];
+            QString *f[3];
+            for (int i = 1; i < 3; ++i)
+                f[i] = new QString[ftmp.size()];
+            for(int i = 1; i < ftmp.size(); ++i)
+            {
+                f[2][i] = ftmp[i];
+            }
+            emit ListReqFiles(f);
+        }
+    }
     statusLabel->setText(request);
     getFortuneButton->setEnabled(true);
 }
-//! [12]
 
-//! [13]
+void Client::sendFINDrequest(QString regexpr)
+{
+    QString request = "FIND " + regexpr;
+    qint64 linelen = sslSocket->write(request.toUtf8() + "\r\n");
+    if(linelen < 0)
+        emit SendError("can't send FIND request");
+}
+
+void Client::sendFoundFiles(QVector<QString> foundFiles)
+{
+    QString request = "FILES " + foundFiles[0];
+    for(int i = 1; i < foundFiles.size(); ++i)
+    {
+        request += ":" + foundFiles[i];
+    }
+
+    qint64 linelen = sslSocket->write(request.toUtf8() + "\r\n");
+    if(linelen < 0)
+        emit SendError("can't send found files request");
+}
+
 void Client::displayError(QAbstractSocket::SocketError socketError)
 {
     switch (socketError) {
@@ -233,7 +268,7 @@ void Client::displayError(QAbstractSocket::SocketError socketError)
 
     getFortuneButton->setEnabled(true);
 }
-//! [13]
+
 
 void Client::enableGetFortuneButton()
 {
@@ -242,6 +277,7 @@ void Client::enableGetFortuneButton()
                                  !portLineEdit->text().isEmpty());
 
 }
+
 void Client::discon()
 {
      statusLabel->setText("disconnected");
@@ -266,5 +302,43 @@ void Client::sessionOpened()
                             "Fortune Server example as well."));
 
     enableGetFortuneButton();
+}
+
+void Client::sendFile(QString fileName)
+{
+
+    FileForSend = new QFile(fileName);
+    if(FileForSend->open(QFile::ReadOnly))
+    {
+        QByteArray data;
+        QDataStream out(&data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_4_2);
+
+        data.append(FileForSend->readAll());
+        FileForSend->close();
+        out.device()->seek(0);
+
+        int written = 0;
+        while(written < data.size())
+            written += sslSocket->write(data);
+    } else
+    {
+        qDebug()<< QString("File not can open for read");
+        return;
+    }
+}
+
+void Client::receiveFile(QString fileName)
+{
+    QDataStream in(sslSocket);
+    QFile target(fileName);
+    if (!target.open(QIODevice::WriteOnly))
+    {
+            qDebug() << "Can't open file for written";
+            return;
+    }
+    QByteArray line = sslSocket->readAll();
+    target.write(line);
+    target.close();
 }
 

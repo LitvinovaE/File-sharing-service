@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include <QSslSocket>
+#include <QFile>
+#include <vector>
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -21,6 +23,8 @@ class Client : public QDialog
 
 public:
     Client(QWidget *parent = 0);
+    void sendFINDrequest(QString );
+    void sendFoundFiles(QVector<QString> );
 
 private slots:
     void requestNewFortune();
@@ -30,8 +34,24 @@ private slots:
     void sessionOpened();
     void discon();
 
+signals:
+    void findByRegexp(char* regexp);
+    void ServerError(char* error);
+    void reply(std::vector<std::string> list);
+    void clientError(char*);
+    void ListReqFiles(QString**);
+    void SendError(char*);
+
 private:
     void loadPfxCertifcate(QString certPath, QString passphrase);
+    void sendFile(QString fileName);
+    void sendPartOfFile();
+    void receiveFile(QString fileName);
+    void receiveFile();
+
+    QFile *FileForSend;
+    QFile *receivedFile;
+    qint64 sizeReceivedData;
 
     QLabel *hostLabel;
     QLabel *portLabel;
