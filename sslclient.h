@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QSslSocket>
 #include <QFile>
-#include <vector>
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -24,7 +23,7 @@ class Client : public QDialog
 public:
     Client(QWidget *parent = 0);
     void sendFINDrequest(QString );
-    void sendFoundFiles(QVector<QString> );
+    void sendFoundFiles(QVector<QFile> );
 
 private slots:
     void requestNewFortune();

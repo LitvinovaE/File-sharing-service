@@ -10,7 +10,7 @@ void Client::loadPfxCertifcate(QString certPath, QString passphrase)
 {
 
     qDebug()<< "ssl gen rsa";
-    QString keygen = "openssl genrsa -out child.key -des 2048 2>/dev/null" + QString("\n") + passphrase + QString("\n") + passphrase;
+    QString keygen = "openssl genrsa -out child.key 2048 2>/dev/null" ;
     system(keygen.toStdString().c_str());
     qDebug() <<"ssl gen rootCA";
     system("openssl req -x509 -newkey rsa:2048 -keyout my.key -out rootCA.crt -days 365 -subj \"/C=US/ST=Oregon/L=Portland/O=Company Name/OU=Org/CN=www.com\" 2>/dev/null");
@@ -149,7 +149,6 @@ Client::Client(QWidget *parent)
 void Client::requestNewFortune()
 {
      static bool conn = false;
-
     getFortuneButton->setEnabled(false);
     if(!conn)
     {
@@ -210,7 +209,7 @@ void Client::readFortune()
         }
         emit ListReqFiles(f);
     }
-    statusLabel->setText(request);
+//    statusLabel->setText(request);
     getFortuneButton->setEnabled(true);
 }
 
@@ -222,13 +221,22 @@ void Client::sendFINDrequest(QString regexpr)
         emit SendError("can't send FIND request");
 }
 
-void Client::sendFoundFiles(QVector<QString> foundFiles)
+void Client::sendFoundFiles(QVector<QFile> foundFiles)
 {
-        //file_name!size!data:file2_name!size!data
-    QString request = "FILES " + foundFiles[0];
-    for(int i = 1; i < foundFiles.size(); ++i)
+    QString request = "FILES " ;
+    QFileInfo info;
+    int j = 0;
+    for(auto i: foundFiles)
     {
-        request += "" + foundFiles[i];
+        info.setFile(i);
+        qint64 size = info.size();
+        request += info.fileName() + "!" ;
+        while (size > 100)
+        {
+            size /= 1024;
+            ++j;
+        }
+        request += QString::number(size) + (j == 0)?"b":(j == 1)?"Kb":(j == 2)?"Mb":"Gb" + "!" + info.fileTime(QFileDevice::FileModificationTime).toString("dd.mm.yy");
     }
 
     qint64 linelen = sslSocket->write(request.toUtf8() + "\r\n");
