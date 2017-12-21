@@ -29,7 +29,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
     {
         QToolTip::showText(ui->file_mask_edit->mapToGlobal(QPoint()), tr("Please, enter the mask of files"));
     }
-    /*QString **file_table = new QString* [30];
+    QString **file_table = new QString* [30];
     int num_elem = 30;
     for(int j = 0; j < num_elem; j++)
     {
@@ -41,7 +41,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
         file_table[j] = str;
     }
     draw_table(file_table, num_elem);
-    new_request(QString("John"), QString("bloknot.txt"));*/
+    new_request(QString("John"), QString("bloknot.txt"));
 }
 
 void MainWindow::draw_table(QString **file_table, int num_elem)
@@ -97,4 +97,9 @@ void MainWindow::on_actionCreators_triggered()
 {
     QMessageBox::information(0, "Creators", "This project is created by:\n\nBondarev Mihail"
                                             "\nLitvinova Evgeniya\nOrlov Oleg\n\n2017, MIPT");
+}
+
+void MainWindow::on_table_widget_doubleClicked(const QModelIndex &index)
+{
+    int row_clicked = index.row();
 }

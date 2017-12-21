@@ -8,6 +8,7 @@
 #include <QString>
 #include <QToolTip>
 #include <QMessageBox>
+#include <iostream>
 
 namespace Ui {
 class MainWindow;
@@ -28,6 +29,8 @@ private slots:
     void on_actionCreators_triggered();
     void slot_login_changed(QString login);
     void slot_request_created(QString request);
+
+    void on_table_widget_doubleClicked(const QModelIndex &index);
 
 private:
     Ui::MainWindow *ui;
