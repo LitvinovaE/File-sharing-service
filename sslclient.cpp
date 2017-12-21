@@ -178,45 +178,37 @@ void Client::requestNewFortune()
 
 void Client::readFortune()
 {
+//    if(linelen < 0) qDebug() <<"\nreading failed";
+//    else qDebug() << request;
+    QString serverSend(sslSocket->readLine());
 
-    char request[256];
-
-    qint64 linelen = sslSocket->readLine(request, sizeof(request));
-
-    if(linelen < 0) qDebug() <<"\nreading failed";
-    else qDebug() << request;
-    QString serverSend(request);
-
-    if(serverSend.toStdString().find("REQUEST") != std::string::npos)
-    {
-        std::size_t len = serverSend.toStdString().copy(request, 256, 8);
-        request[len] = '\0';
-        emit findByRegexp(request);
+    if(serverSend.startsWith("REQUEST ")) {
+        emit findByRegexp(serverSend.remove(0, 8));
     }
-    else if(serverSend.toStdString().find("REJECT") != std::string::npos)
+    else if(serverSend.startsWith("REJECT "))
     {
-        std::size_t len = serverSend.toStdString().copy(request, 256, 7);
-        request[len] = '\0';
-        emit ServerError(request);
+        emit ServerError(serverSend.remove(0, 7));
     }
-    else if(serverSend.toStdString().find("REPLY") != std::string::npos)
+    else if(serverSend.startsWith("REPLY "))
     {
-        QRegExp reg("[ ;]");
-        QStringList files = serverSend.split(reg, QString::SkipEmptyParts);
-        for (int i = 1; i < files.size(); ++i)
+        serverSend = serverSend.remove(0, 6);
+        QStringList files = serverSend.split(';');
+        QString *f[3];
+        for (auto i: files)
         {
-            QString tmp = files[i];
-            QStringList ftmp = tmp.split(QRegExp(":"), QString::SkipEmptyParts);
+            QStringList ftmp = i.split(':');
             QString tmpID = ftmp[0];
-            QString *f[3];
+            ftmp.pop_front();
+
             for (int i = 1; i < 3; ++i)
                 f[i] = new QString[ftmp.size()];
             for(int i = 1; i < ftmp.size(); ++i)
             {
                 f[2][i] = ftmp[i];
             }
-            emit ListReqFiles(f);
+
         }
+        emit ListReqFiles(f);
     }
     statusLabel->setText(request);
     getFortuneButton->setEnabled(true);
@@ -232,10 +224,11 @@ void Client::sendFINDrequest(QString regexpr)
 
 void Client::sendFoundFiles(QVector<QString> foundFiles)
 {
+        //file_name!size!data:file2_name!size!data
     QString request = "FILES " + foundFiles[0];
     for(int i = 1; i < foundFiles.size(); ++i)
     {
-        request += ":" + foundFiles[i];
+        request += "" + foundFiles[i];
     }
 
     qint64 linelen = sslSocket->write(request.toUtf8() + "\r\n");
