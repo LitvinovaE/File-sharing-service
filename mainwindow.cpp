@@ -10,12 +10,11 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     ui->table_widget->setRowCount(1);                              // draw a table
-    ui->table_widget->setColumnCount(4);
+    ui->table_widget->setColumnCount(3);
     ui->table_widget->setColumnWidth(0, 572);
-    ui->table_widget->setColumnWidth(1, 100);
-    ui->table_widget->setColumnWidth(2, 100);
-    ui->table_widget->setColumnWidth(3, 170);
-    ui->table_widget->setHorizontalHeaderLabels(QStringList() << "Name" << "Size" << "Date" << "Owner");
+    ui->table_widget->setColumnWidth(1, 185);
+    ui->table_widget->setColumnWidth(2, 185);
+    ui->table_widget->setHorizontalHeaderLabels(QStringList() << "Name" << "Size" << "Date");
 }
 
 MainWindow::~MainWindow()
