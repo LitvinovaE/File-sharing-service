@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QSslSocket>
+#include <QFileInfoList>
 #include <QFile>
 
 QT_BEGIN_NAMESPACE
@@ -23,7 +24,7 @@ class Client : public QDialog
 public:
     Client(QWidget *parent = 0);
     void sendFINDrequest(QString );
-    void sendFoundFiles(QVector<QFile> );
+    void sendFoundFiles(const QFileInfoList & );
 
 private slots:
     void requestNewFortune();
@@ -34,12 +35,11 @@ private slots:
     void discon();
 
 signals:
-    void findByRegexp(char* regexp);
-    void ServerError(char* error);
+    void ServerError(QString error);
     void reply(std::vector<std::string> list);
-    void clientError(char*);
+    void clientError(const char*);
     void ListReqFiles(QString**);
-    void SendError(char*);
+    void SendError(const char*);
 
 private:
     void loadPfxCertifcate(QString certPath, QString passphrase);

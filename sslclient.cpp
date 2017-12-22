@@ -1,20 +1,41 @@
 ﻿#include <QtWidgets>
 #include <QtNetwork>
+#include <QDir>
+#include <QtDebug>
+#include <QStringList>
 #include <string>
+#include <QFileInfoList>
 
 #include "sslclient.h"
 
 #define SIZE_BLOCK_FOR_SEND_FILE 1024
 
-void Client::loadPfxCertifcate(QString certPath, QString passphrase)
+QFileInfoList find_files(QString path_name, QString reg_expr)
 {
 
-    qDebug()<< "ssl gen rsa";
-    QString keygen = "openssl genrsa -out child.key 2048 2>/dev/null" ;
-    system(keygen.toStdString().c_str());
-    qDebug() <<"ssl gen rootCA";
-    system("openssl req -x509 -newkey rsa:2048 -keyout my.key -out rootCA.crt -days 365 -subj \"/C=US/ST=Oregon/L=Portland/O=Company Name/OU=Org/CN=www.com\" 2>/dev/null");
+    QDir directory(path_name);
 
+    QFileInfoList files = directory.entryInfoList(QStringList(reg_expr), QDir::Files);
+    return files;
+
+}
+void genPfxCertifcate()
+{
+    if(!QFileInfo::exists("child.key"))
+    {
+        qDebug()<< "ssl gen rsa";
+        QString keygen = "openssl genrsa -out child.key 2048" ;
+        system(keygen.toStdString().c_str());
+    }
+    if(!QFileInfo::exists("child.csr"))
+    {
+        qDebug() <<"ssl gen csr";
+        system("openssl req -new -key child.key -out child.csr -subj \"/C=US/ST=Moscow/L=Moscow/O=Company Name/OU=Org/CN=www.com\"");
+    }
+}
+void Client::loadPfxCertifcate(QString certPath, QString passphrase)
+{
+    genPfxCertifcate();
     sslSocket->setPeerVerifyMode(QSslSocket::VerifyNone);
     QList<QSslCertificate> importedCerts = QSslCertificate::fromPath(certPath + "rootCA.crt");
     qDebug() << "read CA certificate";
@@ -25,8 +46,9 @@ void Client::loadPfxCertifcate(QString certPath, QString passphrase)
     this->sslSocket->setCaCertificates(importedCerts);
     this->sslSocket->setLocalCertificate(cert);
     qDebug() << sslSocket->localCertificate().toText();
-    this->sslSocket->setPrivateKey("child.key", QSsl::Rsa, QSsl::Pem, QByteArray::fromStdString(passphrase.toStdString()));
+    this->sslSocket->setPrivateKey(certPath + "child.key", QSsl::Rsa, QSsl::Pem, QByteArray::fromStdString(passphrase.toStdString()));
 
+    qDebug() << this->sslSocket->privateKey().toPem();
 }
 
 Client::Client(QWidget *parent)
@@ -181,8 +203,11 @@ void Client::readFortune()
 //    else qDebug() << request;
     QString serverSend(sslSocket->readLine());
 
-    if(serverSend.startsWith("REQUEST ")) {
-        emit findByRegexp(serverSend.remove(0, 8));
+    qDebug() << serverSend;
+
+    if(serverSend.startsWith("REQUEST "))
+    {
+        sendFoundFiles(find_files("", serverSend.remove(0, 8)));
     }
     else if(serverSend.startsWith("REJECT "))
     {
@@ -203,6 +228,7 @@ void Client::readFortune()
                 f[i] = new QString[ftmp.size()];
             for(int i = 1; i < ftmp.size(); ++i)
             {
+
                 f[2][i] = ftmp[i];
             }
 
@@ -221,22 +247,16 @@ void Client::sendFINDrequest(QString regexpr)
         emit SendError("can't send FIND request");
 }
 
-void Client::sendFoundFiles(QVector<QFile> foundFiles)
+void Client::sendFoundFiles(const QFileInfoList &foundFiles)
 {
     QString request = "FILES " ;
-    QFileInfo info;
-    int j = 0;
-    for(auto i: foundFiles)
+    for(int i = 0; i < foundFiles.size(); ++i)
     {
-        info.setFile(i);
-        qint64 size = info.size();
-        request += info.fileName() + "!" ;
-        while (size > 100)
-        {
-            size /= 1024;
-            ++j;
-        }
-        request += QString::number(size) + (j == 0)?"b":(j == 1)?"Kb":(j == 2)?"Mb":"Gb" + "!" + info.fileTime(QFileDevice::FileModificationTime).toString("dd.mm.yy");
+        qint64 size = foundFiles[i].size();
+        request += foundFiles[i].fileName() + "!" ;
+        size /= 1024;
+        request += QString::number(size) + QString("Kb") + QString("!") +
+                foundFiles[i].fileTime(QFileDevice::FileModificationTime).toString("dd.mm.yy");
     }
 
     qint64 linelen = sslSocket->write(request.toUtf8() + "\r\n");
