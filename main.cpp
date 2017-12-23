@@ -6,13 +6,10 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    /*Login w;
-    if (!w.is_exist())
-        w.show();*/
-    /*Server s;
-    s.show();*/
+    Server s;
     MainWindow main_window;
-    main_window.show();
+    s.show();
+    QObject::connect(&s, &Server::sendLoginData, &main_window, &MainWindow::make_connection);
 
     return a.exec();
 }

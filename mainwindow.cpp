@@ -18,10 +18,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_widget->setColumnWidth(1, 185);
     ui->table_widget->setColumnWidth(2, 185);
     ui->table_widget->setHorizontalHeaderLabels(QStringList() << "Name" << "Size" << "Date");
+}
 
-    // Openning connection
-    // this should be done somewhere else
-    // e.g. in Login
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::make_connection(QString server, QString password)
+{
     connect(sslclient, &Client::clientError, this, [=](QString error){
         QMessageBox::information(this, "sslclient error", error);
     });
@@ -33,13 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
         QMessageBox::information(this, "Server REJECT", msg);
     });
 
-    sslclient->makeConnection("127.0.0.1", 8123);
-
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
+    sslclient->makeConnection(server, 8123, password);
+    show();
 }
 
 void MainWindow::on_button_find_clicked()       //TO DO!!!
@@ -50,25 +50,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
         QToolTip::showText(ui->file_mask_edit->mapToGlobal(QPoint()), tr("Please, enter the mask of files"));
         return;
     }
-#ifdef RISKY
-    QString **file_table = new QString* [30];
-    int num_elem = 30;
-    for(int j = 0; j < num_elem; j++)
-    {
-        QString *str = new QString [4];
-        str[0] = "NNNNAmmmmme";
-        str[1] = "456.25";
-        str[2] = "13.12.2017";
-        str[3] = "John1234";
-        file_table[j] = str;
-    }
-
-
-    draw_table(file_table, num_elem);
-    new_request(QString("John"), QString("bloknot.txt"));
-#else
     sslclient->sendFINDrequest(file_mask);
-#endif
 }
 
 void MainWindow::draw_table(QString **file_table, int num_elem)

@@ -22,6 +22,9 @@ private slots:
     void on_button_OK_clicked();
     void on_button_Cancel_clicked();
 
+signals:
+    void sendLoginData(QString server, QString password);
+
 private:
     Ui::Server *ui;
     bool server_name_is_correct(QString str);

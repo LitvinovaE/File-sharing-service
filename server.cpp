@@ -23,6 +23,7 @@ void Server::on_button_OK_clicked()             // TO DO!!!
         {
         case 0:                                         // connection is ok, close this window and show the next
             close();
+            emit sendLoginData(server_name, password);
             break;
         case 1:
             QMessageBox::information(0, "Error", "Something's wrong!");
@@ -54,7 +55,7 @@ bool Server::server_name_is_correct(QString str)
 
     for(auto &i : str)
     {
-        if(!i.isLetterOrNumber())
+        if(!i.isLetterOrNumber() && !(i == '.'))
             return false;
     }
     return true;

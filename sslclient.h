@@ -16,7 +16,7 @@ class Client : public QWidget
 
 public:
     Client(QWidget *parent = 0);
-    void makeConnection(QString ip, int port);
+    void makeConnection(QString ip, int port, QString password);
     void sendFINDrequest(QString regexpr);
     void sendGETrequest(QString peer, QString file);
 

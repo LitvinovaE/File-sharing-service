@@ -3,6 +3,7 @@
 
 #include "login.h"
 #include "request.h"
+#include "server.h"
 #include "sslclient.h"
 #include "filemodel.h"
 #include <QMainWindow>
@@ -35,6 +36,8 @@ private slots:
     void slot_request_created(QString request);
 
     void on_table_widget_doubleClicked(const QModelIndex &index);
+public slots:
+    void make_connection(QString server, QString password);
 
 private:
     Ui::MainWindow *ui;
