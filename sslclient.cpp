@@ -65,6 +65,8 @@ Client::Client(QWidget *parent)
 //    , networkSession(0)
     , sslSocket(this)
     , shareRoot("/home/mikle/share/")
+    , FileForSend(nullptr)
+    , isRAW(false)
 {
     // TODO: this hardcode needs to be changed!
     QString certs_path = "/home/mikle/certificates/";
@@ -78,6 +80,7 @@ Client::Client(QWidget *parent)
             this, SLOT(displayError(QAbstractSocket::SocketError)));
 
     connect(&sslSocket, SIGNAL(disconnected()), this, SLOT(discon()));
+    connect(this, &QObject::destroyed, &sslSocket, &QAbstractSocket::disconnectFromHost);
 }
 
 void Client::makeConnection(QString ip, int port)
@@ -93,6 +96,11 @@ void Client::readFortune()
 {
 //    if(linelen < 0) qDebug() <<"\nreading failed";
 //    else qDebug() << request;
+    if (isRAW)
+    {
+        receiveFile();
+        return;
+    }
     QString serverSend(sslSocket.readLine());
     serverSend.remove("\r\n");
 
@@ -113,6 +121,12 @@ void Client::readFortune()
     else if (serverSend.startsWith("OBTAIN "))
     {
         sendFile(shareRoot + serverSend.remove(0, 7));
+    }
+    else if (serverSend.startsWith("RAW "))
+    {
+        isRAW = true;
+        currentDownload =shareRoot + "download/" + serverSend.remove(0, 4);
+        receiveFile();
     }
     else
     {
@@ -168,39 +182,74 @@ void Client::discon()
 
 void Client::sendFile(QString fileName)
 {
+#ifdef OLEG
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_4_2);
 
+    data.append(FileForSend->readAll());
+    FileForSend->close();
+    out.device()->seek(0);
+
+    int written = 0;
+    while(written < data.size())
+        written += sslSocket.write(data);
+#else
     FileForSend = new QFile(fileName);
-    if(FileForSend->open(QFile::ReadOnly))
-    {
-        QByteArray data;
-        QDataStream out(&data, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_4_2);
-
-        data.append(FileForSend->readAll());
-        FileForSend->close();
-        out.device()->seek(0);
-
-        int written = 0;
-        while(written < data.size())
-            written += sslSocket.write(data);
-    } else
+    if(!FileForSend->open(QFile::ReadOnly))
     {
         qDebug()<< QString("File not can open for read");
         return;
     }
+
+    QByteArray data;
+    QDataStream out(&data, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_5);
+
+    out << (qint64)0;
+    out << FileForSend->readAll();
+    out.device()->seek(0);
+    out << (qint64)(data.size() - sizeof(qint64));
+
+    FileForSend->close();
+    delete FileForSend;
+    FileForSend = nullptr;
+
+    int written = 0;
+    while(written < data.size() + sizeof(qint64))
+        written += sslSocket.write(data);
+    sslSocket.write("\r\n");
+    sslSocket.waitForBytesWritten();
+#endif
 }
 
-void Client::receiveFile(QString fileName)
+void Client::receiveFile()
 {
     QDataStream in(&sslSocket);
-    QFile target(fileName);
+    in.setVersion(QDataStream::Qt_5_5);
+
+    // QByteArray line = sslSocket.readAll();
+    if (blockSize == 0)
+    {
+        if (sslSocket.bytesAvailable() < sizeof(blockSize))
+            return;
+        // Read size of data stream
+        in >> blockSize;
+    }
+    if (sslSocket.bytesAvailable() < blockSize)
+        // Wait for the whole data
+        return;
+
+    QByteArray line;
+    in >> line;
+    QFile target(currentDownload);
     if (!target.open(QIODevice::WriteOnly))
     {
             qDebug() << "Can't open file for written";
             return;
     }
-    QByteArray line = sslSocket.readAll();
     target.write(line);
     target.close();
+    isRAW = false;
 }
 

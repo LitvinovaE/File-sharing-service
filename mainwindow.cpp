@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
         QMessageBox::information(this, "Server REJECT", msg);
     });
 
-    sslclient->makeConnection("192.168.22.103", 8123);
+    sslclient->makeConnection("127.0.0.1", 8123);
 
 }
 

@@ -35,7 +35,7 @@ private:
     void loadPfxCertifcate(QString certPath, QString passphrase);
 
     void sendFile(QString fileName);
-    void receiveFile(QString fileName);
+    void receiveFile();
 
     QFile *FileForSend;
     QFile *receivedFile;
@@ -43,8 +43,9 @@ private:
 
     QString shareRoot;
     QSslSocket sslSocket;
-    QString currentFortune;
-    quint16 blockSize;
+    QString currentDownload;
+    quint64 blockSize;
+    bool isRAW;
 };
 
 #endif
