@@ -8,11 +8,12 @@ class FileModel : public QObject
 {
     Q_OBJECT
 public:
+    using DataType = QVector<QVector<QString>>;
     explicit FileModel(QObject *parent = nullptr);
 
     void clear(void);
     void parseString(const QString &files);
-    const QVector<QVector<QString>> &getData(void) const;
+    const DataType &getData(void) const;
 
 
 signals:
@@ -20,7 +21,7 @@ signals:
 public slots:
 
 private:
-    QVector<QVector<QString>> m_data;
+    DataType m_data;
 };
 
 #endif // FILEMODEL_H

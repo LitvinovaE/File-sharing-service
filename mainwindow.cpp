@@ -6,6 +6,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , login_window(Q_NULLPTR)
+    , sslclient(new Client(this))
+    , file_list(this)
 {
     ui->setupUi(this);
 
@@ -15,6 +17,23 @@ MainWindow::MainWindow(QWidget *parent)
     ui->table_widget->setColumnWidth(1, 185);
     ui->table_widget->setColumnWidth(2, 185);
     ui->table_widget->setHorizontalHeaderLabels(QStringList() << "Name" << "Size" << "Date");
+
+    // Openning connection
+    // this should be done somewhere else
+    // e.g. in Login
+    connect(sslclient, &Client::clientError, this, [=](QString error){
+        QMessageBox::information(this, "sslclient error", error);
+    });
+    connect(sslclient, &Client::gotResponse, this, [=](const QString &list) {
+        file_list.parseString(list);
+        draw_table();
+    });
+    connect(sslclient, &Client::gotReject, this, [=](const QString &msg) {
+        QMessageBox::information(this, "Server REJECT", msg);
+    });
+
+    sslclient->makeConnection("192.168.22.103", 8123);
+
 }
 
 MainWindow::~MainWindow()
@@ -29,6 +48,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
     {
         QToolTip::showText(ui->file_mask_edit->mapToGlobal(QPoint()), tr("Please, enter the mask of files"));
     }
+#ifdef RISKY
     QString **file_table = new QString* [30];
     int num_elem = 30;
     for(int j = 0; j < num_elem; j++)
@@ -40,8 +60,13 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
         str[3] = "John1234";
         file_table[j] = str;
     }
+
+
     draw_table(file_table, num_elem);
     new_request(QString("John"), QString("bloknot.txt"));
+#else
+    sslclient->sendFINDrequest(file_mask);
+#endif
 }
 
 void MainWindow::draw_table(QString **file_table, int num_elem)
@@ -59,6 +84,29 @@ void MainWindow::draw_table(QString **file_table, int num_elem)
             QTableWidgetItem *item = new QTableWidgetItem(tr("%1").arg(file_table[i][j]));
             ui->table_widget->setItem(i, j, item);
         }
+}
+
+void MainWindow::draw_table(const FileModel::DataType &file_table)
+{
+    int num_elem = file_table.length();
+    ui->table_widget->setRowCount(num_elem);
+    if(num_elem > 21)
+        ui->table_widget->setColumnWidth(0, 547);
+    else
+        ui->table_widget->setColumnWidth(0, 563);
+    int row_number = ui->table_widget->rowCount();
+    int column_number = ui->table_widget->columnCount();
+    for(int i = 0; i < row_number; i++)
+        for(int j = 0; j < column_number; j++)
+        {
+            QTableWidgetItem *item = new QTableWidgetItem(tr("%1").arg(file_table[i][j]));
+            ui->table_widget->setItem(i, j, item);
+        }
+}
+
+void MainWindow::draw_table()
+{
+    draw_table(file_list.getData());
 }
 
 void MainWindow::new_request(QString user_name, QString file_name)

@@ -3,6 +3,8 @@
 
 #include "login.h"
 #include "request.h"
+#include "sslclient.h"
+#include "filemodel.h"
 #include <QMainWindow>
 #include <QVector>
 #include <QString>
@@ -36,7 +38,12 @@ private:
     Ui::MainWindow *ui;
     Login *login_window;
     Request *request_window;
+    Client *sslclient;
+    FileModel file_list;
+
     void draw_table(QString **file_table, int num_elem);
+    void draw_table(const FileModel::DataType &file_table);
+    void draw_table();
     void new_request(QString user_name, QString file_name);
 };
 

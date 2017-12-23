@@ -17,12 +17,16 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     login.cpp \
     server.cpp \
-    request.cpp
+    request.cpp \
+    filemodel.cpp \
+    sslclient.cpp
 
 HEADERS += mainwindow.h \
     login.h \
     server.h \
-    request.h
+    request.h \
+    filemodel.h \
+    sslclient.h
 
 FORMS   += mainwindow.ui \
     login.ui \
