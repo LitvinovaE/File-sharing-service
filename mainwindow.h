@@ -24,6 +24,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    QString getShareRoot() const { return m_share_root; }
+
 private slots:
     void on_button_find_clicked();
     void on_actionChange_login_triggered();
@@ -40,6 +42,8 @@ private:
     Request *request_window;
     Client *sslclient;
     FileModel file_list;
+
+    QString m_share_root;
 
     void draw_table(QString **file_table, int num_elem);
     void draw_table(const FileModel::DataType &file_table);

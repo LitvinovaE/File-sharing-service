@@ -26,6 +26,8 @@ private:
     Ui::Server *ui;
     bool server_name_is_correct(QString str);
     int send_data_for_connection(QString server_name, QString password);       // return server's answer about connection
+//    enum command {REQUEST, REJECT, RESPONSE, RECIEVE};
+//    Q_ENUM(command)
 };
 
 #endif // SERVER_H

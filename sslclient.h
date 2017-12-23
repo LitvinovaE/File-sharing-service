@@ -18,6 +18,7 @@ public:
     Client(QWidget *parent = 0);
     void makeConnection(QString ip, int port);
     void sendFINDrequest(QString regexpr);
+    void sendGETrequest(QString peer, QString file);
 
 private slots:
     void discon();
@@ -40,6 +41,7 @@ private:
     QFile *receivedFile;
     qint64 sizeReceivedData;
 
+    QString shareRoot;
     QSslSocket sslSocket;
     QString currentFortune;
     quint16 blockSize;

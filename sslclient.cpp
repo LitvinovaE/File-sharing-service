@@ -64,6 +64,7 @@ Client::Client(QWidget *parent)
     : QWidget(parent)
 //    , networkSession(0)
     , sslSocket(this)
+    , shareRoot("/home/mikle/share/")
 {
     // TODO: this hardcode needs to be changed!
     QString certs_path = "/home/mikle/certificates/";
@@ -99,7 +100,7 @@ void Client::readFortune()
 
     if(serverSend.startsWith("REQUEST "))
     {
-        processRequest(find_files("/tmp/", serverSend.remove(0, 8)));
+        processRequest(find_files(shareRoot, serverSend.remove(0, 8)));
     }
     else if(serverSend.startsWith("REJECT "))
     {
@@ -109,6 +110,14 @@ void Client::readFortune()
     {
         emit gotResponse(serverSend.remove(0, 9));
     }
+    else if (serverSend.startsWith("OBTAIN "))
+    {
+        sendFile(shareRoot + serverSend.remove(0, 7));
+    }
+    else
+    {
+        emit clientError("Not a valid command: " + serverSend);
+    }
 }
 
 void Client::sendFINDrequest(QString regexpr)
@@ -117,6 +126,14 @@ void Client::sendFINDrequest(QString regexpr)
     qint64 linelen = sslSocket.write(request.toUtf8() + "\r\n");
     if(linelen < 0)
         emit clientError("can't send FIND request");
+}
+
+void Client::sendGETrequest(QString peer, QString file)
+{
+    QString request = QString("GET %1:%2").arg(peer, file);
+    qint64 linelen = sslSocket.write(request.toUtf8() + "\r\n");
+    if(linelen < 0)
+        emit clientError("can't send GET request");
 }
 
 void Client::processRequest(const QFileInfoList &foundFiles)

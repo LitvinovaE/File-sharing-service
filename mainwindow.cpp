@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent)
     , login_window(Q_NULLPTR)
     , sslclient(new Client(this))
     , file_list(this)
+//    , m_share_root("/tmp/")
 {
     ui->setupUi(this);
 
@@ -47,6 +48,7 @@ void MainWindow::on_button_find_clicked()       //TO DO!!!
     if(file_mask.isEmpty())
     {
         QToolTip::showText(ui->file_mask_edit->mapToGlobal(QPoint()), tr("Please, enter the mask of files"));
+        return;
     }
 #ifdef RISKY
     QString **file_table = new QString* [30];
@@ -150,4 +152,6 @@ void MainWindow::on_actionCreators_triggered()
 void MainWindow::on_table_widget_doubleClicked(const QModelIndex &index)
 {
     int row_clicked = index.row();
+    auto file_row = file_list.getData()[row_clicked];
+    sslclient->sendGETrequest(file_row[3], file_row[0]);
 }
