@@ -1,12 +1,18 @@
-﻿#include <QApplication>
-#include "sslclient.h"
-
+#include "mainwindow.h"
+#include "login.h"
+#include "server.h"
+#include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
-    Client client;
-    client.show();
-    return app.exec();
+    QApplication a(argc, argv);
+    /*Login w;
+    if (!w.is_exist())
+        w.show();*/
+    /*Server s;
+    s.show();*/
+    MainWindow main_window;
+    main_window.show();
 
+    return a.exec();
 }
